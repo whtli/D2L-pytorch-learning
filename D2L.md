@@ -338,7 +338,7 @@
 
 + 深度学习模型常常使用丢弃法（dropout）来应对过拟合问题
 + 倒置丢弃法（inverted dropout）
-+ 丢弃概率*p*是丢弃法的==超参数==，**丢弃法不改变其输入的期望值**。
++ 丢弃概率*p*是丢弃法的==超参数==，丢弃法不改变其输入的期望值。
 + 在测试模型时，为了拿到更加确定性的结果，一般不使用丢弃法。
 
 ### 3.14 正向传播、反向传播和计算图
@@ -467,4 +467,81 @@
 + **池化层对每个输入通道分别池化**，即池化层输出通道数等于输入通道数
 
 ### 5.5 卷积神经网络（LeNet）
+
++ 卷积神经网络就是含卷积层的网络。
+
++ LeNet交替使用卷积层和最大池化层后接全连接层来进行图像分类。
+
+  在卷积层块中输入的高和宽在逐层减小。卷积层由于使用高和宽均为5的卷积核，从而将高和宽分别减小4。
+
+  而池化层则将高和宽减半，但通道数则从1增加到16。
+
+  全连接层则逐层减少输出个数，直到变成图像的类别数10。
+
+  ```python
+  LeNet(
+    # convolutions 全连接层
+    (conv): Sequential(
+      (0): Conv2d(1, 6, kernel_size=(5, 5), stride=(1, 1))
+      (1): Sigmoid()
+      (2): MaxPool2d(kernel_size=2, stride=2, padding=0, dilation=1, ceil_mode=False)
+      (3): Conv2d(6, 16, kernel_size=(5, 5), stride=(1, 1))
+      (4): Sigmoid()
+      (5): MaxPool2d(kernel_size=2, stride=2, padding=0, dilation=1, ceil_mode=False)
+    )
+    # full connection 全连接层
+    (fc): Sequential(
+      (0): Linear(in_features=256, out_features=120, bias=True)
+      (1): Sigmoid()
+      (2): Linear(in_features=120, out_features=84, bias=True)
+      (3): Sigmoid()
+      (4): Linear(in_features=84, out_features=10, bias=True)
+    )
+  )
+  ```
+
+### 5.6 深度卷积神经网络
+
++ 神经网络可以直接基于图像的原始像素进行分类。这种称为端到端（end-to-end）的方法节省了很多中间步骤。
++ [AlexNet](Krizhevsky, A., Sutskever, I., & Hinton, G. E. (2012). Imagenet classification with deep convolutional neural networks. In Advances in neural information processing systems (pp. 1097-1105).)使用了8层卷积神经网络![image-20211222095533813](https://s2.loli.net/2021/12/22/SJqvPnD6N7Emp8l.png)
+
++ ```python
+  AlexNet(
+    (conv): Sequential(
+      (0): Conv2d(1, 96, kernel_size=(11, 11), stride=(4, 4))
+      (1): ReLU()
+      (2): MaxPool2d(kernel_size=3, stride=2, padding=0, dilation=1, ceil_mode=False)
+      (3): Conv2d(96, 256, kernel_size=(5, 5), stride=(1, 1), padding=(2, 2))
+      (4): ReLU()
+      (5): MaxPool2d(kernel_size=3, stride=2, padding=0, dilation=1, ceil_mode=False)
+      (6): Conv2d(256, 384, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+      (7): ReLU()
+      (8): Conv2d(384, 384, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+      (9): ReLU()
+      (10): Conv2d(384, 256, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+      (11): ReLU()
+      (12): MaxPool2d(kernel_size=3, stride=2, padding=0, dilation=1, ceil_mode=False)
+    )
+    (fc): Sequential(
+      (0): Linear(in_features=6400, out_features=4096, bias=True)
+      (1): ReLU()
+      (2): Dropout(p=0.5, inplace=False)
+      (3): Linear(in_features=4096, out_features=4096, bias=True)
+      (4): ReLU()
+      (5): Dropout(p=0.5, inplace=False)
+      (6): Linear(in_features=4096, out_features=10, bias=True)
+    )
+  )
+  ```
+
++ AlexNet第一层中的卷积窗口形状是 11×11。用更大的卷积窗口来捕获物体。第二层中的卷积窗口形状减小到 5×5，之后全采用 3×3。
+
+  第1、2、5个卷积层之后都 用了窗口形状为 3×3、步幅为2的最大池化层。且AlexNet使用的卷积通道数也大于LeNet中的卷积通道数数十倍。
+
+  AlexNet将sigmoid激活函数改成了更加简单的ReLU激活函数。
+
+  1. ReLU激活函数的计算更简单。
+  2. ReLU激活函数在不同的参数初始化方法下使模型更容易训练。ReLU在正区间的梯度恒为1；sigmoid输出极接近0或1时，这些区域的梯度几乎为0，导致反向传播无法继续更新部分模型参数，若模型参数初始化不当，sigmoid可能会在正区间得到几乎为0的梯度，导致模型无法有效训练。
+
+  AlexNet通过丢弃法（ch 3.13）来控制全连接层的模型复杂度。
 
